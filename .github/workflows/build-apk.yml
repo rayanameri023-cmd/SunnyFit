@@ -1,0 +1,36 @@
+name: Build SunnyFit APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Extract SunnyFit
+        run: |
+          mkdir extracted
+          unzip -q *.zip -d extracted
+          PROJECT_DIR=$(find extracted -name settings.gradle.kts -printf '%h\n' | head -n 1)
+          test -n "$PROJECT_DIR"
+          cp -a "$PROJECT_DIR"/. .
+
+      - name: Build APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SunnyFit-APK
+          path: app/build/outputs/apk/debug/*.apk
